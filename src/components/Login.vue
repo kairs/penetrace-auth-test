@@ -2,7 +2,8 @@
   <div>
     <div class="container">
       <form class="form-signin">
-        <div v-if="username==''">
+
+        <div v-if="state=='sign-in'">
           <h2 class="form-signin-heading">Please sign in</h2>
           <label for="username" class="sr-only">Email address</label>
           <input type="email" id="username" class="form-control" placeholder="Email address" required autofocus v-model="loginUsername" >
@@ -15,11 +16,15 @@
           </div>
           <button class="btn btn-lg btn-primary btn-block" type="submit" @click='loginClick'>Sign in</button>
         </div>
-        <div v-if="username!=''">
+        <div v-if="state=='logged-in'">
           <button class="btn btn-lg btn-primary btn-block" type="submit" @click='logoutClick'>Sign out</button>
         </div>
-      </form>
 
+        <div v-if="state=='buzy'" class="text-center">
+          <loader width="30px" height="30px" border="6px" margin="0px"></loader>
+        </div>
+
+      </form>
 
     </div>
   </div>
@@ -33,14 +38,19 @@
     mapGetters
   } from 'vuex'
 
+    import loader from './loader'
+
+
   export default {
     name: 'Login',
-    components: {      
+    components: {
+      loader
     },
     data() {
       return {
-        loginUsername: '',
-        loginPassword: ''
+        loginUsername: 'kai.rune@slettemoen.no',
+        loginPassword: 'w%#653&puzSw5l31',
+        state: 'sign-in'
       }
     },
     computed: {
@@ -48,17 +58,41 @@
           'username'
       ])
     },
-     methods: {
+    created: function () {
+      var ctx = this
+      this.state = 'buzy'
+
+      this.getProfile().then((r) => {
+        if (r != null) {
+          ctx.storeUser({
+            id: r.id,
+            username: r.username,
+            fullname: r.firstname + ' ' + r.lastname
+          })
+          ctx.state = 'logged-in'
+        } else {
+          ctx.state = 'sign-in'
+        }
+        //{"active":true,"company":"Penetrace AS","description":"Full name: Kai-Rune Slettemoen\nSenior system developer, worked with the Penetrace solution since 2008.","email":"kai.rune@slettemoen.no","firstname":"Kai-Rune","id":766,"lastname":"(Penetrace)","mobile":"004791577550","title":"Developer","username":"kai.rune@slettemoen.no","timestamp":636313953480404}
+      })
+    },    
+    methods: {
           ...mapActions([
-              'login',
-              'logout'
+            'getProfile',
+            'login',
+            'logout',
+            'storeUser'
           ]),
 
           logoutClick: function() {
+            this.state = 'sign-in'
             this.logout()
           },
 
           loginClick: function() {
+            var ctx = this
+            this.state = 'buzy'
+
             this.login({ 
               username: this.loginUsername, 
               password: this.loginPassword, 
@@ -66,6 +100,7 @@
             })
             .then((r) => {
               console.log(r)
+              ctx.state = 'logged-in'
             })
           }
         }

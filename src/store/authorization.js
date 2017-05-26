@@ -18,36 +18,42 @@ export const store = new Vuex.Store({
   },
   
   actions: {
-    getNavigation: (context, payload) => {
-      return Vue.http.get('https://develop.penetrace.com/api/v1/en/UI/Navigation/a635721305369502872', {
-        //credentials: true
+
+    getProfile: (context, payload) => {
+      return Vue.http.get('https://develop.penetrace.com/api/v1/NO/Authorization/Profile')
+      .then((r) => {
+        if(r.data.active == true) return r.data
+        return null
       })
+    },
+
+    getNavigation: (context, payload) => {
+      return Vue.http.get('https://develop.penetrace.com/api/v1/en/UI/Navigation/a635721305369502872')
       .then((r) => {
         return r.data
       })
     },
 
     logout: (context, payload) => {
-      return Vue.http.get('https://develop.penetrace.com/api/v1/NO/Authorization/Logout', {
-      }, {
-        //credentials: true
-      })
+      return Vue.http.get('https://develop.penetrace.com/api/v1/NO/Authorization/Logout')
       .then((r) => {
         context.commit('logout')
       })
     },
+
     login: (context, payload) => {
       return Vue.http.post('https://develop.penetrace.com/api/v1/NO/Authorization/Logon', {
         username: payload.username,
         password: payload.password,
         rememberMe: payload.rememberMe
-      }, {
-        //credentials: true
       })
       .then((r) => {
-        context.commit('login', r.data)
+        context.commit('storeUser', r.data)
         return r.data
       })
+    },
+    storeUser: (context, payload) => {
+      context.commit('storeUser', payload)
     }
   },
   mutations: {
@@ -57,7 +63,7 @@ export const store = new Vuex.Store({
       state.fullname = '';
     },
 
-    login: (state, payload) => {
+    storeUser: (state, payload) => {
       state.id = payload.id;
       state.username = payload.username;
       state.fullname = payload.fullname;
